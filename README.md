@@ -1,4 +1,4 @@
-# NOTE
+# NOTICE
 This library is under development.
 
 The README may not be sufficient; if you find something not in README, please view the code.
