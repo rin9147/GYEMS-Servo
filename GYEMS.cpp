@@ -313,16 +313,16 @@ void GYEMS::MotorRun()
 
 }
 
-void GYEMS::Setzero()
+void GYEMS::SetZero()
 {
   byte SetZeroCommand = 0x19;
   byte DataLength = 0x00;
-  byte DataCheckByte = Header + SetZero + _ID + DataLength;
+  byte DataCheckByte = Header + SetZeroCommand + _ID + DataLength;
 
   digitalWrite(RS485_EN,HIGH);                            // Pulling the pin 2 HIGH for sending via Tx
   delayMicroseconds(50);                                  // delay a bit before start sending...
   Serial1.write(Header);
-  Serial1.write(SetZero);
+  Serial1.write(SetZeroCommand);
   Serial1.write(_ID);
   Serial1.write(DataLength);
   Serial1.write(DataCheckByte);
