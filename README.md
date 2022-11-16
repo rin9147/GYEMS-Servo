@@ -8,22 +8,10 @@ This project, I made an Arduino library to communicate with "RMD-L" series. So i
 
 # Hardware
 1. GYEMS servo motor
-2. Arduino MEGA
-3. TTL to RS485 module for converting signal
+2. M5Stack Core2
+3. TTL to RS485 module for converting signal(M5 RS485 module)
 4. RS485 to USB for confif the servo on PC before use
 5. Battery (7.0 to 30.0 V)
-
-# Let's start!
-First, you may need to config the servo with the software provided from manufacturer [This link](http://www.gyems.cn/support/download) or download the zip file "RMD-L config Setup V1.1", extract then install the program. Open the program, it's called "RMD-L config V1.1". After the window opened, connect your servo to your pc via RS485-USB module. Select COM port and ID (default is 1) to connect the servo. You can read/write parameter of PID gain and try test it on Test tab.
-
-![](images/newconfig.PNG)
-
-![](images/testpage.PNG)
-
-# Install
-Download this repository and copy the whole thing to \Documents\Arduino\libraries\ on your PC, it's the directory of all your downloaded Arduino libraries. If you have all the stuff already, please make a wiring according to this image below
-
-![](images/wiring.PNG)
 
 # Source Code and Explanation
 First, let me confess that I am not the professional programmer, so the style of coding in mine might not make someone happy, so please be kind to me and understand this, I will try explain as much as I can :)
