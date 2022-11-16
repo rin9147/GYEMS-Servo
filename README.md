@@ -1,3 +1,10 @@
+# NOTE
+This library is under development.
+
+The README may not be sufficient; if you find something not in README, please view the code.
+
+Use of my library is at your own risk. If you have any concerns, please use the original library.
+
 # GYEMS Servo Motor
 
 This servo is a brushless servo motor, which communicating via RS485. The servo is controlled by sending a data packt according to the desired control mode. For more detail about this product, please check on "RMD-L Servo Motor Manual V1.2 -EN" file. 

@@ -9,7 +9,10 @@
 
 #include "Arduino.h"
 
-#define RS485_EN 2
+#define RS485_EN 2      // You can choose EN Pin-Assign
+#define RS485_RX 33     // You can choose RX Pin-Assign
+#define RS485_TX 32     // You can choose TX Pin-Assign
+
 #define MAXDPS 30000
 
 class GYEMS
@@ -109,6 +112,7 @@ public:
     // PositionControlMode4: The servo will run with the specified speed as "DPS" to the desired angle "Deg" 
     // with desired direction as "Direction", 0x00 for clockwise and 0x01 with counter clockwise
 
+    void IncrementalControlMode2(unsigned long long Deg, unsigned long DPS, int replyData[3], bool reply_flag);
 
 private:
     int _currentPosition;
