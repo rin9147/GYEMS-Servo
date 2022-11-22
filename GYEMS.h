@@ -88,7 +88,7 @@ public:
 	// 2． The command will write the zero point to the drive FLASH memory. Multiple writes will affect the chip life. 
 	// It is not recommended to use it frequently
 
-    void TorqueControl(unsigned int Torque);
+    void TorqueControl(unsigned int Torque,int replyData[3], bool reply_flag);
     // TorqueControl: closed loop torque control
     // Input is the ratio of torque from -5000 to +5000, the actual torque depends on motor's model
 

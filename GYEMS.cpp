@@ -284,12 +284,14 @@ void GYEMS::SetZero()
 
 // Torque closed loop control command
 //------------------------------------------------------------------//
-void GYEMS::TorqueControl(unsigned int Torque)
+void GYEMS::TorqueControl(unsigned int Torque,int replyData[3], bool reply_flag)
 {
   // Torque is a raw value, actual torque depends on the motor spec
   byte TorqueCommand = 0xA1;
   byte DataLength = 0x02;
+  byte DataLengthReplay = 0x07;
   byte FrameCheckSum = Header + TorqueCommand + DataLength + _ID;
+  byte FrameCheckSumReply = Header + TorqueCommand + DataLengthReplay + _ID;
   unsigned char TorqueByte[2];
   Int16ToByteData(Torque,TorqueByte);
   byte DataCheckByte = TorqueByte[1] + TorqueByte[0];
@@ -306,6 +308,27 @@ void GYEMS::TorqueControl(unsigned int Torque)
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(RS485_EN,LOW);
+
+  if (reply_flag == true)
+  {
+    delayMicroseconds(800);
+    unsigned char EncoderReply[13] = {0};
+    int EncoderReplySize = sizeof(EncoderReply);
+    int64_t headCheck = 0;
+    while (Serial1.available() > 0)
+    {
+      Serial1.readBytes(EncoderReply, EncoderReplySize);
+      headCheck = (byte) EncoderReply[4];
+      if (FrameCheckSumReply == EncoderReply[0] + EncoderReply[1] + EncoderReply[2] + EncoderReply[3])
+      {
+        replyData[0] = (int8_t)EncoderReply[5];
+        replyData[1] = (int16_t)(EncoderReply[7] << 8) | EncoderReply[6];
+        replyData[2] = (int16_t)(EncoderReply[9] << 8) | EncoderReply[8];
+        replyData[3] = (int16_t)(EncoderReply[11] << 8) | EncoderReply[10];
+      }
+    }
+    delayMicroseconds(800);
+  }
 }
 
 // Speed closed loop control command
