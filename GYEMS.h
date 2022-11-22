@@ -72,6 +72,9 @@ public:
     // output of this function will give us a current position of encoder as 12bit data (0-4095)
     // return an angle data in degree
 
+    void ReadReply13bit(byte commandByte, int replyData[3]);
+    // read Driver respond(13bit)
+
     void MotorOff();
     // MotorOff: Turn off the motor and clear the motor running status and the previously received control commands.
 
@@ -92,23 +95,23 @@ public:
     // TorqueControl: closed loop torque control
     // Input is the ratio of torque from -5000 to +5000, the actual torque depends on motor's model
 
-    void SpeedControl(float DPS);
+    void SpeedControl(float DPS, int replyData[3], bool reply_flag);
     // SpeedControl: this function is to control the speed of servo in degree per second (dps or DPS). max. value is 720DPS.
     // The direction of the motor is determined from the sign of input DPS
 
-    void PositionControlMode1(unsigned long long Deg);
+    void MultiPositionControlMode1(unsigned long long Deg, int replyData[3], bool reply_flag);
     // PositionControlMode1: The servo will run with maximum speed as config (720dps as default) to the desired position "Deg"
     // This is a multi turn mode, the input Deg can be from -3600deg to 3600deg (10rounds)
 
-    void PositionControlMode2(unsigned long long Deg, unsigned long DPS);
+    void MultiPositionControlMode2(unsigned long long Deg, unsigned long DPS, int replyData[3], bool reply_flag);
     // PositionControlMode2: The servo will run with the specified speed as "DPS" to the desired angle "Deg"
     // This is a multi turn mode, the input Deg can be from -3600deg to 3600deg (10rounds), and max. speed is 720dps.
 
-    void PositionControlMode3(unsigned long Deg, byte Direction);
+    void SignlePositionControlMode1(unsigned long Deg, byte Direction, int replyData[3], bool reply_flag);
     // PositionControlMode3: The servo will run with maximum speed as config (720dps as default) to the desired position "Deg" 
     // with the desired direction as "Direction", 0x00 for clockwise and 0x01 with counter clockwise
 
-    void PositionControlMode4(unsigned long Deg, unsigned long DPS, byte Direction);
+    void SignlePositionControlMode2(unsigned long Deg, unsigned long DPS, byte Direction, int replyData[3], bool reply_flag);
     // PositionControlMode4: The servo will run with the specified speed as "DPS" to the desired angle "Deg" 
     // with desired direction as "Direction", 0x00 for clockwise and 0x01 with counter clockwise
 

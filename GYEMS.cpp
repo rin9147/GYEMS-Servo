@@ -107,6 +107,29 @@ float GYEMS::ReadReply()
   return CurrentDeg;
 }
 
+// read Driver respond(13bit)
+//------------------------------------------------------------------//
+void GYEMS::ReadReply13bit(byte commandByte, int replyData[3])
+{
+  delayMicroseconds(800);
+  int replayData[4];
+  byte FrameCheckSumReply = Header + commandByte + 0x07 + _ID;
+  unsigned char EncoderReply[13] = {0};
+  int EncoderReplySize = sizeof(EncoderReply);
+  while (Serial1.available() > 0)
+  {
+    Serial1.readBytes(EncoderReply, EncoderReplySize);
+    if (FrameCheckSumReply == EncoderReply[0] + EncoderReply[1] + EncoderReply[2] + EncoderReply[3])
+    {
+      replyData[0] = (int8_t)EncoderReply[5];
+      replyData[1] = (int16_t)(EncoderReply[7] << 8) | (EncoderReply[6]);
+      replyData[2] = (int16_t)(EncoderReply[9] << 8) | (EncoderReply[8]);
+      replyData[3] = (int16_t)(EncoderReply[11] << 8) | (EncoderReply[10]);
+    }
+  }
+  delayMicroseconds(800);
+}
+
 // Read encoder current degrees command (NOTE: THIS PART WILL BE EDITED)
 //------------------------------------------------------------------//
 float GYEMS::GetCurrentDEG()
@@ -289,9 +312,9 @@ void GYEMS::TorqueControl(unsigned int Torque,int replyData[3], bool reply_flag)
   // Torque is a raw value, actual torque depends on the motor spec
   byte TorqueCommand = 0xA1;
   byte DataLength = 0x02;
-  byte DataLengthReplay = 0x07;
+  //byte DataLengthReplay = 0x07;
   byte FrameCheckSum = Header + TorqueCommand + DataLength + _ID;
-  byte FrameCheckSumReply = Header + TorqueCommand + DataLengthReplay + _ID;
+  //byte FrameCheckSumReply = Header + TorqueCommand + DataLengthReplay + _ID;
   unsigned char TorqueByte[2];
   Int16ToByteData(Torque,TorqueByte);
   byte DataCheckByte = TorqueByte[1] + TorqueByte[0];
@@ -311,32 +334,16 @@ void GYEMS::TorqueControl(unsigned int Torque,int replyData[3], bool reply_flag)
 
   if (reply_flag == true)
   {
-    delayMicroseconds(800);
-    unsigned char EncoderReply[13] = {0};
-    int EncoderReplySize = sizeof(EncoderReply);
-    int64_t headCheck = 0;
-    while (Serial1.available() > 0)
-    {
-      Serial1.readBytes(EncoderReply, EncoderReplySize);
-      headCheck = (byte) EncoderReply[4];
-      if (FrameCheckSumReply == EncoderReply[0] + EncoderReply[1] + EncoderReply[2] + EncoderReply[3])
-      {
-        replyData[0] = (int8_t)EncoderReply[5];
-        replyData[1] = (int16_t)(EncoderReply[7] << 8) | EncoderReply[6];
-        replyData[2] = (int16_t)(EncoderReply[9] << 8) | EncoderReply[8];
-        replyData[3] = (int16_t)(EncoderReply[11] << 8) | EncoderReply[10];
-      }
-    }
-    delayMicroseconds(800);
+    ReadReply13bit(TorqueCommand, replyData);
   }
 }
 
 // Speed closed loop control command
 //------------------------------------------------------------------//
-void GYEMS::SpeedControl(float DPS)
+void GYEMS::SpeedControl(float DPS, int replyData[3], bool reply_flag)
 {
   // DPS is degree per second
-  float SpeedLSB = DPS*100;
+  float SpeedLSB = DPS * 100;
   byte SpeedCommand = 0xA2;
   byte DataLength = 0x04;
   byte FrameCheckSum = Header + SpeedCommand + DataLength + _ID;
@@ -358,17 +365,21 @@ void GYEMS::SpeedControl(float DPS)
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(RS485_EN,LOW);
-  //ReadReply();
+
+  if (reply_flag == true)
+  {
+    ReadReply13bit(SpeedCommand, replyData);
+  }
 }
 
 // Multi position closed loop control command 1
 //------------------------------------------------------------------//
-void GYEMS::PositionControlMode1(unsigned long long Deg)
+void GYEMS::MultiPositionControlMode1(unsigned long long Deg, int replyData[3], bool reply_flag)
 { 
-  unsigned long long DegLSB = Deg*100;
+  unsigned long long DegLSB = Deg * 100;
   byte PositionCommand1 = 0xA3;
   byte DataLength = 0x08;
-  byte FrameCheckSum = Header + PositionCommand1 + _ID + DataLength ;
+  byte FrameCheckSum = Header + PositionCommand1 + _ID + DataLength;
   unsigned char PositionByte[8];
   Int64ToByteData(DegLSB,PositionByte);
   byte DataCheckByte = PositionByte[7] + PositionByte[6] + PositionByte[5] + PositionByte[4] + PositionByte[3] + PositionByte[2] + PositionByte[1] + PositionByte[0];
@@ -391,18 +402,22 @@ void GYEMS::PositionControlMode1(unsigned long long Deg)
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(RS485_EN,LOW);
-  //ReadReply();
+
+  if (reply_flag == true)
+  {
+    ReadReply13bit(PositionCommand1, replyData);
+  }
 }
 
 // Multi position closed loop control command 2
 //------------------------------------------------------------------//
-void GYEMS::PositionControlMode2(unsigned long long Deg, unsigned long DPS)
+void GYEMS::MultiPositionControlMode2(unsigned long long Deg, unsigned long DPS, int replyData[3], bool reply_flag)
 {
-  unsigned long long DegLSB = Deg*100;
-  unsigned long SpeedLSB = DPS*100;
+  unsigned long long DegLSB = Deg * 100;
+  unsigned long SpeedLSB = DPS * 100;
   byte PositionCommand2 = 0xA4;
   byte DataLength = 0x0C;
-  byte FrameCheckSum = Header + PositionCommand2 + _ID + DataLength ;
+  byte FrameCheckSum = Header + PositionCommand2 + _ID + DataLength;
   unsigned char PositionByte[8];
   unsigned char SpeedByte[4];
   Int32ToByteData(SpeedLSB,SpeedByte);
@@ -431,17 +446,21 @@ void GYEMS::PositionControlMode2(unsigned long long Deg, unsigned long DPS)
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(RS485_EN,LOW);
-  //ReadReply(); 
+
+  if (reply_flag == true)
+  {
+    ReadReply13bit(PositionCommand2, replyData);
+  }
 }
 
-// Multi position closed loop control command 3
+// Single position closed loop control command 1
 //------------------------------------------------------------------//
-void GYEMS::PositionControlMode3(unsigned long Deg, byte Direction)
+void GYEMS::SignlePositionControlMode1(unsigned long Deg, byte Direction, int replyData[3], bool reply_flag)
 {
-  unsigned long DegLSB = Deg*100;
+  unsigned long DegLSB = Deg * 100;
   byte PositionCommand3 = 0xA5;
   byte DataLength = 0x04;
-  byte FrameCheckSum = Header + PositionCommand3 + _ID + DataLength ;
+  byte FrameCheckSum = Header + PositionCommand3 + _ID + DataLength;
   unsigned char PositionByte[4];
   Int32ToByteData(DegLSB,PositionByte);
   byte DataCheckByte = Direction + PositionByte[3] + PositionByte[2] + PositionByte[1];
@@ -460,18 +479,22 @@ void GYEMS::PositionControlMode3(unsigned long Deg, byte Direction)
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(RS485_EN,LOW);
-  //ReadReply();
+
+  if (reply_flag == true)
+  {
+    ReadReply13bit(PositionCommand3, replyData);
+  }
 }
 
 // Incremental closed-loop control command 2
 //------------------------------------------------------------------//
-void GYEMS::PositionControlMode4(unsigned long Deg, unsigned long DPS, byte Direction)
+void GYEMS::SignlePositionControlMode2(unsigned long Deg, unsigned long DPS, byte Direction, int replyData[3], bool reply_flag)
 {
-  unsigned long DegLSB = Deg*100;
-  unsigned long SpeedLSB = DPS*100;
+  unsigned long DegLSB = Deg * 100;
+  unsigned long SpeedLSB = DPS * 100;
   byte PositionCommand4 = 0xA6;
   byte DataLength = 0x08;
-  byte FrameCheckSum = Header + PositionCommand4 + _ID + DataLength ;
+  byte FrameCheckSum = Header + PositionCommand4 + _ID + DataLength;
   unsigned char PositionByte[4];
   unsigned char SpeedByte[4];
   Int32ToByteData(DegLSB,PositionByte);
@@ -496,7 +519,11 @@ void GYEMS::PositionControlMode4(unsigned long Deg, unsigned long DPS, byte Dire
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(RS485_EN,LOW);
-  //ReadReply();
+
+  if (reply_flag == true)
+  {
+    ReadReply13bit(PositionCommand4, replyData);
+  }
 }
 
 // Multi position closed loop control command 1
@@ -507,7 +534,9 @@ void GYEMS::IncrementalControlMode2(unsigned long long Deg, unsigned long DPS, i
   unsigned long SpeedLSB = DPS * 100;
   byte IncrementalCommand2 = 0xA8;
   byte DataLength = 0x08;
+  byte DataLengthReplay = 0x07;
   byte FrameCheckSum = Header + IncrementalCommand2 + _ID + DataLength;
+  byte FrameCheckSumReply = Header + IncrementalCommand2 + DataLengthReplay + _ID;
   unsigned char PositionByte[4];
   unsigned char SpeedByte[4];
 
@@ -532,28 +561,10 @@ void GYEMS::IncrementalControlMode2(unsigned long long Deg, unsigned long DPS, i
   Serial1.write(SpeedByte[0]);
   Serial1.write(DataCheckByte);
   Serial1.flush();
-
   digitalWrite(RS485_EN, LOW);
+
   if (reply_flag == true)
   {
-    int i = 0;
-    bool ReadOK = false;
-    unsigned char EncoderReply[13] = {0};
-
-    while (Serial1.available() > 0)
-    {
-      ReadByte = Serial1.read();
-      EncoderReply[i] = ReadByte;
-      i++;
-
-      ReadOK = true;
-    }
-    if (ReadOK == true)
-    {
-      replyData[0] = EncoderReply[5];
-      replyData[1] = ((EncoderReply[7] << 8 & 0xFF) | (EncoderReply[6] & 0xFF)) * 33 / 2048;
-      replyData[2] = ((EncoderReply[9] << 8 & 0xFF) | (EncoderReply[8] & 0xFF));
-      replyData[3] = ((EncoderReply[11] << 8 & 0xFF) | (EncoderReply[10] & 0xFF)) / 16383 * 360;
-    }
+    ReadReply13bit(IncrementalCommand2, replyData);
   }
 }

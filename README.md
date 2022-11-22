@@ -26,10 +26,10 @@ First, let me confess that I am not the professional programmer, so the style of
 There are 6 control mode you can play with from this library.
 1. TorqueControl(Torque), by passing the raw value between -5000 to +5000, the actual torque depends on servo spec. This is closed loop torque control, so the motor will spin forever until the current torque reach your input value.
 2. SpeedControl(DPS), by passing desired speed in the unit of degree per seconds (DPS) to the function
-3. PositionControlMode1(Deg), by passing the desired position in degree, then the servo will turn with maximum speed (720DPS). This is multi turn mode, the servo has maximum rotation as 3600 degrees (10 turns)
-4. PositionControlMode2(Deg,DPS), by passing the desired position in degree and desired speed in DPS. This is multi turn mode similar as PositionControlMode1.
-5. PositionControlMode3(Deg, Direction), by passing the desired position and direction, the servo will turn with maximum speed (720DPS). This is a single turn mode, so the max value of Deg is 360 and direction can be 0 for clockwise and 1 for counter-clockwise.
-6. PositionControlMode4(Deg, DPS, Direction), by passing the desired position, speed and direction as unit specified before. This is a single turn mode, so the max value of Deg is 360.
+3. MultiPositionControlMode1(Deg), by passing the desired position in degree, then the servo will turn with maximum speed (720DPS). This is multi turn mode, the servo has maximum rotation as 3600 degrees (10 turns)
+4. MultiPositionControlMode2(Deg,DPS), by passing the desired position in degree and desired speed in DPS. This is multi turn mode similar as PositionControlMode1.
+5. SinglePositionControlMode1(Deg, Direction), by passing the desired position and direction, the servo will turn with maximum speed (720DPS). This is a single turn mode, so the max value of Deg is 360 and direction can be 0 for clockwise and 1 for counter-clockwise.
+6. SinglePositionControlMode2(Deg, DPS, Direction), by passing the desired position, speed and direction as unit specified before. This is a single turn mode, so the max value of Deg is 360.
 
 The control mode above are similar as Test page in RMD-L config software you installed before.
 
@@ -96,10 +96,10 @@ void setup() {
 
   // Uncomment one of these control you want to test with
   GS.SpeedControl(270);
-  //GS.PositionControlMode1(180);
-  //GS.PositionControlMode2(0,90);
-  //GS.PositionControlMode3(45,0x00);
-  //GS.PositionControlMode4(90,360,0x01);
+  //GS.MultiPositionControlMode1(180);
+  //GS.MultiPositionControlMode2(0,90);
+  //GS.SinglePositionControlMode1(45,0x00);
+  //GS.SinglePositionControlMode2(90,360,0x01);
 
 }
 
@@ -139,9 +139,9 @@ GYEMS GS3(servo3);
 Then you can control each servo in the control mode you want like,
 
 ```
-GS1.PositionControlMode2(90,180);
-GS2.PositionControlMode2(180,360);
-GS3.PositionControlMode2(240,720);
+GS1.MultiPositionControlMode2(90,180);
+GS2.MultiPositionControlMode2(180,360);
+GS3.MultiPositionControlMode2(240,720);
 ```
 
 All read the present angle data of each servo like,
