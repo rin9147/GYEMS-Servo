@@ -53,30 +53,6 @@ void GYEMS::Int64ToByteData(int64_t Data, byte StoreByte[8])
   StoreByte[7] = byte((Data & 0x00000000000000FF));
 }
 
-// read Driver respond(12bit)
-//------------------------------------------------------------------//
-void GYEMS::ReadReply12bit(byte commandByte, int8_t replyData[4])
-{
-  delayMicroseconds(800); // ReadReplay needs delayMicroseconds(800). DO NOT REMOVE AND CHANGE IT.
-  byte FrameCheckSumReply = Header + commandByte + 0x06 + _ID;
-  byte EncoderReply[13] = {0};
-  int EncoderReplySize = sizeof(EncoderReply);
-  while (Serial1.available() > 0)
-  {
-    Serial1.readBytes(EncoderReply, EncoderReplySize);
-    if (FrameCheckSumReply == EncoderReply[0] + EncoderReply[1] + EncoderReply[2] + EncoderReply[3])
-    {
-      replyData[0] = (int8_t)EncoderReply[5];
-      replyData[1] = (int8_t)EncoderReply[6];
-      replyData[2] = (int8_t)EncoderReply[7];
-      replyData[3] = (int8_t)EncoderReply[8];
-      replyData[4] = (int8_t)EncoderReply[9];
-      replyData[5] = (int8_t)EncoderReply[10];
-    }
-  }
-  delayMicroseconds(800); // ReadReplay needs delayMicroseconds(800). DO NOT REMOVE AND CHANGE IT.
-}
-
 // read Driver respond(13bit)
 //------------------------------------------------------------------//
 void GYEMS::ReadReply13bit(byte commandByte, int16_t replyData[4])
@@ -93,7 +69,7 @@ void GYEMS::ReadReply13bit(byte commandByte, int16_t replyData[4])
       replyData[0] = (int8_t)EncoderReply[5];
       replyData[1] = (int16_t)(EncoderReply[7] << 8) | (EncoderReply[6]);
       replyData[2] = (int16_t)(EncoderReply[9] << 8) | (EncoderReply[8]);
-      replyData[3] = (int16_t)(EncoderReply[11] << 8) | (EncoderReply[10]);
+      replyData[4] = (int16_t)(EncoderReply[11] << 8) | (EncoderReply[10]);
     }
   }
   delayMicroseconds(800); // ReadReplay needs delayMicroseconds(800). DO NOT REMOVE AND CHANGE IT.
@@ -112,94 +88,22 @@ void GYEMS::ReadReply14bit(byte commandByte, int64_t replyData[1])
     Serial1.readBytes(EncoderReply, EncoderReplySize);
     if (FrameCheckSumReply == EncoderReply[0] + EncoderReply[1] + EncoderReply[2] + EncoderReply[3])
     {
-      replyData[0] =
-        (int64_t)EncoderReply[5] |
-        ((int64_t)EncoderReply[6] << 8) |
-        ((int64_t)EncoderReply[7] << 16) |
-        ((int64_t)EncoderReply[8] << 24) |
-        ((int64_t)EncoderReply[9] << 32) |
-        ((int64_t)EncoderReply[10] << 40) |
-        ((int64_t)EncoderReply[11] << 48) |
-        ((int64_t)EncoderReply[12] << 56);
+      replyData[0] =  (int64_t)EncoderReply[5]
+                      | ((int64_t)EncoderReply[6] << 8)
+                      | ((int64_t)EncoderReply[7] << 16)
+                      | ((int64_t)EncoderReply[8] << 24)
+                      | ((int64_t)EncoderReply[9] << 32)
+                      | ((int64_t)EncoderReply[10] << 40)
+                      | ((int64_t)EncoderReply[11] << 48)
+                      | ((int64_t)EncoderReply[12] << 56);
     }
   }
   delayMicroseconds(800); // ReadReplay needs delayMicroseconds(800). DO NOT REMOVE AND CHANGE IT.
 }
 
-// Read PID parameter command
-//------------------------------------------------------------------//
-void GYEMS::ReadPIDParameter(int8_t replyData[6])
-{
-  byte ReadPIDParameterCommand = 0x30;
-  byte DataLength = 0x00;
-  byte DataCheckByte = Header + ReadPIDParameterCommand + _ID + DataLength;
-
-  digitalWrite(_EN, HIGH);
-  delayMicroseconds(50);
-  Serial1.write(Header);
-  Serial1.write(ReadPIDParameterCommand);
-  Serial1.write(_ID);
-  Serial1.write(DataLength);
-  Serial1.write(DataCheckByte);
-  Serial1.flush();
-  digitalWrite(_EN, LOW);
-
-  delayMicroseconds(800);
-
-  ReadReply12bit(ReadPIDParameterCommand, replyData);
-}
-
-// Write PID parameter to RAM command
-//------------------------------------------------------------------//
-void GYEMS::WritePIDParameter(int8_t anglePidKp, int8_t anglePidki, int8_t speedPidKp, int8_t speedPidKi, int8_t iqPidKp, int8_t iqPidKi)
-{
-  byte WritePIDParameterRAMCommand = 0x31;
-  byte DataLength = 0x00;
-  byte DataCheckByte = Header + WritePIDParameterRAMCommand + _ID + DataLength;
-
-  digitalWrite(_EN, HIGH);
-  delayMicroseconds(50);
-  Serial1.write(Header);
-  Serial1.write(WritePIDParameterRAMCommand);
-  Serial1.write(_ID);
-  Serial1.write(DataLength);
-  Serial1.write(DataCheckByte);
-  Serial1.write(anglePidKp);
-  Serial1.write(anglePidki);
-  Serial1.write(speedPidKp);
-  Serial1.write(speedPidKi);
-  Serial1.write(iqPidKp);
-  Serial1.write(iqPidKi);
-  Serial1.flush();
-  digitalWrite(_EN, LOW);
-
-  delayMicroseconds(800);
-}
-
-// Write the current opsition to ROM as the motor zero command (This command is not recommended for frequent use)
-//------------------------------------------------------------------//
-void GYEMS::SetZero(void)
-{
-  byte SetZeroCommand = 0x19;
-  byte DataLength = 0x00;
-  byte DataCheckByte = Header + SetZeroCommand + _ID + DataLength;
-
-  digitalWrite(_EN, HIGH);
-  delayMicroseconds(50);
-  Serial1.write(Header);
-  Serial1.write(SetZeroCommand);
-  Serial1.write(_ID);
-  Serial1.write(DataLength);
-  Serial1.write(DataCheckByte);
-  Serial1.flush();
-  digitalWrite(_EN, LOW);
-
-  delayMicroseconds(800);
-}
-
 // Read multi-loop Angle command
 //------------------------------------------------------------------//
-void GYEMS::ReadMuitiLoopAngle(int64_t replyData[4])
+void GYEMS::ReadMuitiLoopAngle(int64_t replyData[4], bool reply_flag)
 {
   byte ReadMultiLoopAngleCommand = 0x92;
   byte DataLength = 0x00;
@@ -217,7 +121,10 @@ void GYEMS::ReadMuitiLoopAngle(int64_t replyData[4])
 
   delayMicroseconds(800);
 
-  ReadReply14bit(ReadMultiLoopAngleCommand, replyData);
+  if (reply_flag == true)
+  {
+    ReadReply14bit(ReadMultiLoopAngleCommand, replyData);
+  }
 }
 
 // Motor stop shutdown command
@@ -284,45 +191,37 @@ void GYEMS::MotorRun(void)
   delayMicroseconds(800);
 }
 
-// Torque open loop control command This command only for RMD-S series.
+// Write the current opsition to ROM as the motor zero command (This command is not recommended for frequent use)
 //------------------------------------------------------------------//
-void GYEMS::TorqueOpenControl(int16_t Torque, int16_t replyData[4], bool reply_flag)
+void GYEMS::SetZero(void)
 {
-  // Torque is a raw value, actual torque depends on the motor spec
-  byte TorqueOpenCommand = 0xA0;
-  byte DataLength = 0x02;
-  byte FrameCheckSum = Header + TorqueOpenCommand + DataLength + _ID;
-  byte TorqueByte[2];
-  Int16ToByteData(Torque, TorqueByte);
-  byte DataCheckByte = TorqueByte[1] + TorqueByte[0];
+  byte SetZeroCommand = 0x19;
+  byte DataLength = 0x00;
+  byte DataCheckByte = Header + SetZeroCommand + _ID + DataLength;
 
   digitalWrite(_EN, HIGH);
   delayMicroseconds(50);
   Serial1.write(Header);
-  Serial1.write(TorqueOpenCommand);
+  Serial1.write(SetZeroCommand);
   Serial1.write(_ID);
   Serial1.write(DataLength);
-  Serial1.write(FrameCheckSum);
-  Serial1.write(TorqueByte[1]);
-  Serial1.write(TorqueByte[0]);
   Serial1.write(DataCheckByte);
   Serial1.flush();
   digitalWrite(_EN, LOW);
 
-  if (reply_flag == true)
-  {
-    ReadReply13bit(TorqueOpenCommand, replyData);
-  }
+  delayMicroseconds(800);
 }
 
-// Torque closed loop control command This command only for RMD-L and RMD-X series.
+// Torque closed loop control command
 //------------------------------------------------------------------//
 void GYEMS::TorqueControl(int16_t Torque, int16_t replyData[4], bool reply_flag)
 {
   // Torque is a raw value, actual torque depends on the motor spec
   byte TorqueCommand = 0xA1;
   byte DataLength = 0x02;
+  // byte DataLengthReplay = 0x07;
   byte FrameCheckSum = Header + TorqueCommand + DataLength + _ID;
+  // byte FrameCheckSumReply = Header + TorqueCommand + DataLengthReplay + _ID;
   byte TorqueByte[2];
   Int16ToByteData(Torque, TorqueByte);
   byte DataCheckByte = TorqueByte[1] + TorqueByte[0];
@@ -382,7 +281,7 @@ void GYEMS::SpeedControl(int32_t DPS, int16_t replyData[4], bool reply_flag)
 
 // Multi position closed loop control command 1
 //------------------------------------------------------------------//
-void GYEMS::MultiPositionControlMode1(int64_t Deg, int16_t replyData[4], bool reply_flag)
+void GYEMS::MultiPositionControlMode1(int64_t Deg, int64_t replyData[4], bool reply_flag)
 {
   int64_t DegLSB = Deg * 100;
   byte MultiPositionCommand1 = 0xA3;
@@ -413,13 +312,13 @@ void GYEMS::MultiPositionControlMode1(int64_t Deg, int16_t replyData[4], bool re
 
   if (reply_flag == true)
   {
-    ReadReply13bit(MultiPositionCommand1, replyData);
+    ReadReply14bit(MultiPositionCommand1, replyData);
   }
 }
 
 // Multi position closed loop control command 2
 //------------------------------------------------------------------//
-void GYEMS::MultiPositionControlMode2(int64_t Deg, uint32_t DPS, int16_t replyData[4], bool reply_flag)
+void GYEMS::MultiPositionControlMode2(int64_t Deg, uint32_t DPS, int64_t replyData[4], bool reply_flag)
 {
   int64_t DegLSB = Deg * 100;
   uint32_t SpeedLSB = DPS * 100;
@@ -457,7 +356,7 @@ void GYEMS::MultiPositionControlMode2(int64_t Deg, uint32_t DPS, int16_t replyDa
 
   if (reply_flag == true)
   {
-    ReadReply13bit(MultiPositionCommand2, replyData);
+    ReadReply14bit(MultiPositionCommand2, replyData);
   }
 }
 
